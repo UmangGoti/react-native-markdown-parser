@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# React Native Markdown Parser
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native component for rendering GitHub-flavored Markdown, including images, video, tables, and more.
 
-## Get started
+## Features
 
-1. Install dependencies
+- GitHub-flavored Markdown (GFM) support
+- Images and video embedding
+- Tables, lists, blockquotes, code blocks
+- Custom styles via props
 
-   ```bash
-   npm install
-   ```
+## Installation
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+npm install react-native-markdown-parser marked react-native-video
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Usage
 
-## Learn more
+```tsx
+import { MarkdownParser } from 'react-native-markdown-parser';
 
-To learn more about developing your project with Expo, look at the following resources:
+export default function MyScreen() {
+  const markdown = `
+  # Hello Markdown
+  - List item
+  - [Link](https://example.com)
+  \`\`\`js
+  console.log('code!');
+  \`\`\`
+  `;
+  return <MarkdownParser markdownText={markdown} />;
+}
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Props
 
-## Join the community
+- `markdownText: string` (required) — The Markdown content to render.
+- `customStyles?: MarkdownStyles` — Optional custom styles for Markdown elements.
 
-Join our community of developers creating universal apps.
+## Customization
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Override any style by passing a `customStyles` prop:
+
+```tsx
+<MarkdownParser
+  markdownText={markdown}
+  customStyles={{
+    heading: { color: 'tomato' },
+    code: { backgroundColor: '#222' },
+  }}
+/>
+```
+
+## License
+
+MIT
