@@ -1,5 +1,6 @@
-export { default as MarkdownParser } from "./components/MarkdownParser";
-export type {
+import MarkdownParser, {
   MarkdownParserProps,
-  MarkdownStyles
+  MarkdownStyles,
 } from "./components/MarkdownParser";
+export default MarkdownParser;
+export type { MarkdownParserProps, MarkdownStyles };

@@ -9,7 +9,7 @@ import {
   Text,
   TextStyle,
   View,
-  ViewStyle
+  ViewStyle,
 } from "react-native";
 import Video from "react-native-video";
 
@@ -56,7 +56,7 @@ export type { MarkdownParserProps, MarkdownStyles };
 marked.setOptions({
   gfm: true,
   breaks: true,
-  pedantic: false
+  pedantic: false,
 });
 
 // Define custom extensions for marked
@@ -75,13 +75,13 @@ const markedExtensions = {
           return {
             type: "superscript",
             raw: match[0],
-            text: match[1].trim()
+            text: match[1].trim(),
           };
         }
       },
       renderer(token) {
         return `<sup>${token.text}</sup>`;
-      }
+      },
     },
     {
       name: "subscript",
@@ -96,13 +96,13 @@ const markedExtensions = {
           return {
             type: "subscript",
             raw: match[0],
-            text: match[1].trim()
+            text: match[1].trim(),
           };
         }
       },
       renderer(token) {
         return `<sub>${token.text}</sub>`;
-      }
+      },
     },
     {
       name: "footnote",
@@ -117,13 +117,13 @@ const markedExtensions = {
           return {
             type: "footnote",
             raw: match[0],
-            text: match[1].trim()
+            text: match[1].trim(),
           };
         }
       },
       renderer(token) {
         return `[${token.text}]`;
-      }
+      },
     },
     {
       name: "video",
@@ -138,15 +138,15 @@ const markedExtensions = {
           return {
             type: "video",
             raw: match[0],
-            href: match[1].trim()
+            href: match[1].trim(),
           };
         }
       },
       renderer(token) {
         return `<video src="${token.href}" controls></video>`;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Apply the extensions
@@ -154,7 +154,7 @@ marked.use(markedExtensions);
 
 const MarkdownParser: React.FC<MarkdownParserProps> = ({
   markdownText,
-  customStyles = {}
+  customStyles = {},
 }) => {
   // Parse Markdown into tokens
   const tokens = useMemo(() => marked.lexer(markdownText), [markdownText]);
@@ -180,7 +180,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
           style={[
             styles.listitemContainer,
             customStyles.listitemContainer,
-            { marginLeft: 1 * level }
+            { marginLeft: 1 * level },
           ]}
         >
           <Text style={[styles.listitem, customStyles.listitem]}>
@@ -194,7 +194,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
                 style={[
                   styles.nestedList,
                   customStyles.nestedList,
-                  { marginLeft: 20 }
+                  { marginLeft: 20 },
                 ]}
               >
                 {renderListItems(listToken.items, listToken.ordered, level + 1)}
@@ -346,7 +346,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
                   style={[
                     styles.tableCell,
                     styles.tableHeader,
-                    customStyles.tableHeader
+                    customStyles.tableHeader,
                   ]}
                 >
                   {renderTokens(cell.tokens)}
@@ -428,129 +428,129 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
 // Base styles
 const styles = StyleSheet.create({
   container: {
-    padding: 16
+    padding: 16,
   },
   heading: {
     fontWeight: "bold",
-    marginVertical: 8
+    marginVertical: 8,
   },
   paragraph: {
     fontSize: 16,
-    marginVertical: 4
+    marginVertical: 4,
   },
   strong: {
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   em: {
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   del: {
-    textDecorationLine: "line-through"
+    textDecorationLine: "line-through",
   },
   link: {
     color: "#1a0dab",
-    textDecorationLine: "underline"
+    textDecorationLine: "underline",
   },
   image: {
     width: "100%",
     height: 200,
     resizeMode: "contain",
-    marginVertical: 8
+    marginVertical: 8,
   },
   video: {
     width: "100%",
     height: 200,
-    marginVertical: 8
+    marginVertical: 8,
   },
   videoPlayer: {
     width: "100%",
-    height: "100%"
+    height: "100%",
   },
   code: {
     backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 4,
-    marginVertical: 8
+    marginVertical: 8,
   },
   codeText: {
     fontFamily: "Courier New",
-    fontSize: 14
+    fontSize: 14,
   },
   codespan: {
     fontFamily: "Courier New",
     backgroundColor: "#f0f0f0",
     paddingHorizontal: 4,
-    borderRadius: 4
+    borderRadius: 4,
   },
   blockquote: {
     borderLeftWidth: 4,
     borderLeftColor: "#ccc",
     paddingLeft: 12,
-    marginVertical: 8
+    marginVertical: 8,
   },
   list: {
-    marginVertical: 8
+    marginVertical: 8,
   },
   listitemContainer: {
     flexDirection: "column",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   listitem: {
     fontSize: 16,
-    marginVertical: 2
+    marginVertical: 2,
   },
   nestedList: {
-    marginVertical: 4
+    marginVertical: 4,
   },
   table: {
     borderWidth: 1,
     borderColor: "#ccc",
-    marginVertical: 8
+    marginVertical: 8,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc"
+    borderBottomColor: "#ccc",
   },
   tableCell: {
     flex: 1,
     padding: 8,
-    fontSize: 14
+    fontSize: 14,
   },
   tableHeader: {
     fontWeight: "bold",
-    backgroundColor: "#f0f0f0"
+    backgroundColor: "#f0f0f0",
   },
   hr: {
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
-    marginVertical: 8
+    marginVertical: 8,
   },
   br: {
-    height: 8
+    height: 8,
   },
   space: {
-    height: 8
+    height: 8,
   },
   footnote: {
     fontSize: 12,
-    color: "#555"
+    color: "#555",
   },
   superscript: {
     fontSize: 12,
     lineHeight: 16,
     position: "relative",
-    top: -5
+    top: -5,
   },
   subscript: {
     fontSize: 12,
     lineHeight: 16,
     position: "relative",
-    bottom: -5
+    bottom: -5,
   },
   taskCheckbox: {
-    fontSize: 16
-  }
+    fontSize: 16,
+  },
 });
 
 export default MarkdownParser;
