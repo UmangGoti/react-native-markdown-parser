@@ -245,6 +245,76 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
           </Text>
         );
 
+      case "blockquote":
+        return (
+          <View
+            key={index}
+            style={[styles.blockquote, customStyles.blockquote]}
+          >
+            {renderInlineTokens(token.tokens)}
+          </View>
+        );
+
+      case "list":
+        return (
+          <View key={index} style={[styles.list, customStyles.list]}>
+            {renderListItems(token.items, token.ordered)}
+          </View>
+        );
+
+      case "table":
+        return (
+          <View key={index} style={[styles.table, customStyles.table]}>
+            <View style={[styles.tableRow, customStyles.tableRow]}>
+              {token.header.map((cell: any, i: number) => (
+                <Text
+                  key={`header-${i}`}
+                  style={[
+                    styles.tableCell,
+                    styles.tableHeader,
+                    customStyles.tableHeader,
+                  ]}
+                >
+                  {renderInlineTokens(cell.tokens)}
+                </Text>
+              ))}
+            </View>
+            {token.rows.map((row: any[], rowIndex: number) => (
+              <View
+                key={`row-${rowIndex}`}
+                style={[styles.tableRow, customStyles.tableRow]}
+              >
+                {row.map((cell: any, cellIndex: number) => (
+                  <Text
+                    key={`cell-${rowIndex}-${cellIndex}`}
+                    style={[styles.tableCell, customStyles.tableCell]}
+                  >
+                    {renderInlineTokens(cell.tokens)}
+                  </Text>
+                ))}
+              </View>
+            ))}
+          </View>
+        );
+
+      case "code":
+        return (
+          <View key={index} style={[styles.code, customStyles.code]}>
+            <Text style={[styles.codeText, customStyles.codeText]}>
+              {token.text}
+            </Text>
+          </View>
+        );
+
+      case "hr":
+        return <View key={index} style={[styles.hr, customStyles.hr]} />;
+
+      case "br":
+        return <View key={index} style={[styles.br, customStyles.br]} />;
+
+      case "space":
+        return <View key={index} style={[styles.space, customStyles.space]} />;
+
       /* ----- inline ----- */
       case "text":
         return token.text;
@@ -321,76 +391,6 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
             />
           </View>
         );
-
-      case "blockquote":
-        return (
-          <View
-            key={index}
-            style={[styles.blockquote, customStyles.blockquote]}
-          >
-            {renderInlineTokens(token.tokens)}
-          </View>
-        );
-
-      case "list":
-        return (
-          <View key={index} style={[styles.list, customStyles.list]}>
-            {renderListItems(token.items, token.ordered)}
-          </View>
-        );
-
-      case "table":
-        return (
-          <View key={index} style={[styles.table, customStyles.table]}>
-            <View style={[styles.tableRow, customStyles.tableRow]}>
-              {token.header.map((cell: any, i: number) => (
-                <Text
-                  key={`header-${i}`}
-                  style={[
-                    styles.tableCell,
-                    styles.tableHeader,
-                    customStyles.tableHeader,
-                  ]}
-                >
-                  {renderInlineTokens(cell.tokens)}
-                </Text>
-              ))}
-            </View>
-            {token.rows.map((row: any[], rowIndex: number) => (
-              <View
-                key={`row-${rowIndex}`}
-                style={[styles.tableRow, customStyles.tableRow]}
-              >
-                {row.map((cell: any, cellIndex: number) => (
-                  <Text
-                    key={`cell-${rowIndex}-${cellIndex}`}
-                    style={[styles.tableCell, customStyles.tableCell]}
-                  >
-                    {renderInlineTokens(cell.tokens)}
-                  </Text>
-                ))}
-              </View>
-            ))}
-          </View>
-        );
-
-      case "code":
-        return (
-          <View key={index} style={[styles.code, customStyles.code]}>
-            <Text style={[styles.codeText, customStyles.codeText]}>
-              {token.text}
-            </Text>
-          </View>
-        );
-
-      case "hr":
-        return <View key={index} style={[styles.hr, customStyles.hr]} />;
-
-      case "br":
-        return <View key={index} style={[styles.br, customStyles.br]} />;
-
-      case "space":
-        return <View key={index} style={[styles.space, customStyles.space]} />;
 
       case "footnote":
         return (
