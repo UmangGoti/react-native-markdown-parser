@@ -17,6 +17,7 @@
     "components/**/*.ts",
     "components/**/*.tsx",
     "components/*.ts",
-    "components/*.tsx"
+    "components/*.tsx",
+    "index.tsx"
   ]
 }
