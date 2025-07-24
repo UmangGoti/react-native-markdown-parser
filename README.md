@@ -9,7 +9,6 @@ A React Native component for rendering GitHub-flavored Markdown, including image
 - Tables, lists, blockquotes, code blocks
 - Custom styles via props
 
-
 ## Installation
 
 ```sh
@@ -25,7 +24,7 @@ yarn add react-native-markdown-parser marked react-native-video
 ## Usage
 
 ```tsx
-import { MarkdownParser } from 'react-native-markdown-parser';
+import { MarkdownParser } from "react-native-markdown-parser";
 
 export default function MyScreen() {
   const markdown = `
@@ -39,12 +38,11 @@ export default function MyScreen() {
   return <MarkdownParser markdownText={markdown} />;
 }
 ```
-
 
 ## Usage
 
 ```tsx
-import MarkdownParser from 'react-native-markdown-parser';
+import MarkdownParser from "react-native-markdown-parser";
 
 export default function MyScreen() {
   const markdown = `
@@ -58,8 +56,10 @@ export default function MyScreen() {
   return <MarkdownParser markdownText={markdown} />;
 }
 ```
+
 ```
 
 ## License
 
 MIT
+```
