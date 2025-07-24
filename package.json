@@ -1,6 +1,6 @@
 {
   "name": "react-native-markdown-parser",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A React Native component for rendering GitHub-flavored Markdown, including images, video, tables, and more.",
   "keywords": [
     "react-native",
@@ -21,15 +21,22 @@
   "license": "MIT",
   "author": "Umang Goti <umanggoti1@email.com>",
   "type": "commonjs",
-  "main": "index.tsx",
-  "types": "index.tsx",
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": ""
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-native": ">=0.70.0",
-    "marked": ">=16.0.0",
-    "react-native-video": ">=5.0.0"
+    "marked": "^16.1.1",
+    "react": "^19.1.0",
+    "react-native": "^0.80.2",
+    "react-native-video": "^6.16.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-native": "^0.72.8",
+    "typescript": "^5.8.3"
   }
 }
