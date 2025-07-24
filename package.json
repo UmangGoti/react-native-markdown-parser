@@ -1,6 +1,6 @@
 {
   "name": "react-native-markdown-parser",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A React Native component for rendering GitHub-flavored Markdown, including images, video, tables, and more.",
   "keywords": [
     "react-native",

@@ -1,20 +1,19 @@
 import { marked } from "marked";
 import React, { useMemo } from "react";
+import type { ImageStyle, TextStyle, ViewStyle } from "react-native";
 import {
   Image,
-  ImageStyle,
   Linking,
   ScrollView,
   StyleSheet,
   Text,
-  TextStyle,
   View,
-  ViewStyle,
 } from "react-native";
 import Video from "react-native-video";
 
-// Define custom style types
-interface MarkdownStyles {
+/* ---------- Types ---------- */
+
+export interface MarkdownStyles {
   container?: ViewStyle;
   heading?: TextStyle;
   paragraph?: TextStyle;
@@ -45,30 +44,28 @@ interface MarkdownStyles {
   taskCheckbox?: TextStyle;
 }
 
-interface MarkdownParserProps {
+export interface MarkdownParserProps {
   markdownText: string;
   customStyles?: MarkdownStyles;
 }
 
-export type { MarkdownParserProps, MarkdownStyles };
+/* ---------- marked setup ---------- */
 
-// Configure marked for GFM support
 marked.setOptions({
   gfm: true,
   breaks: true,
   pedantic: false,
 });
 
-// Define custom extensions for marked
-const markedExtensions = {
+marked.use({
   extensions: [
     {
       name: "superscript",
       level: "inline",
-      start(src) {
+      start(src: string) {
         return src.indexOf("^");
       },
-      tokenizer(src, tokens) {
+      tokenizer(src: string) {
         const rule = /^\^([^^]+)\^/;
         const match = rule.exec(src);
         if (match) {
@@ -79,17 +76,17 @@ const markedExtensions = {
           };
         }
       },
-      renderer(token) {
+      renderer(token: any) {
         return `<sup>${token.text}</sup>`;
       },
     },
     {
       name: "subscript",
       level: "inline",
-      start(src) {
+      start(src: string) {
         return src.indexOf("~");
       },
-      tokenizer(src, tokens) {
+      tokenizer(src: string) {
         const rule = /^~([^~]+)~/;
         const match = rule.exec(src);
         if (match) {
@@ -100,17 +97,17 @@ const markedExtensions = {
           };
         }
       },
-      renderer(token) {
+      renderer(token: any) {
         return `<sub>${token.text}</sub>`;
       },
     },
     {
       name: "footnote",
       level: "inline",
-      start(src) {
+      start(src: string) {
         return src.indexOf("[^");
       },
-      tokenizer(src, tokens) {
+      tokenizer(src: string) {
         const rule = /^\[\^([^\]]+)\]/;
         const match = rule.exec(src);
         if (match) {
@@ -121,17 +118,17 @@ const markedExtensions = {
           };
         }
       },
-      renderer(token) {
+      renderer(token: any) {
         return `[${token.text}]`;
       },
     },
     {
       name: "video",
       level: "inline",
-      start(src) {
+      start(src: string) {
         return src.indexOf("![[video]]");
       },
-      tokenizer(src, tokens) {
+      tokenizer(src: string) {
         const rule = /^!\[\[video\]\]\(([^)]+)\)/;
         const match = rule.exec(src);
         if (match) {
@@ -142,24 +139,43 @@ const markedExtensions = {
           };
         }
       },
-      renderer(token) {
+      renderer(token: any) {
         return `<video src="${token.href}" controls></video>`;
       },
     },
   ],
-};
+});
 
-// Apply the extensions
-marked.use(markedExtensions);
+/* ---------- Component ---------- */
 
 const MarkdownParser: React.FC<MarkdownParserProps> = ({
   markdownText,
   customStyles = {},
 }) => {
-  // Parse Markdown into tokens
-  const tokens = useMemo(() => marked.lexer(markdownText), [markdownText]);
+  // Normalize line breaks to ensure consistent parsing
+  const normalizedMarkdown = markdownText.replace(/\r\n|\r/g, "\n");
+  const tokens = useMemo(() => {
+    const parsedTokens = marked.lexer(normalizedMarkdown);
+    // Optional: Uncomment to debug token output
+    // console.log("Tokens:", JSON.stringify(parsedTokens, null, 2));
+    return parsedTokens;
+  }, [normalizedMarkdown]);
 
-  // Function to render nested lists
+  /* ---- render helpers ---- */
+
+  // Inline renderer (returns strings and <Text/> nodes that can sit inside one parent <Text>)
+  const renderInlineTokens = (inlineTokens: any[] = []): React.ReactNode[] =>
+    inlineTokens
+      .map((t, i) => {
+        // Handle nested text tokens with their own tokens
+        if (t.type === "text" && t.tokens) {
+          return renderInlineTokens(t.tokens);
+        }
+        return renderToken(t, `in-${i}`);
+      })
+      .flat();
+
+  // List items need special nesting support
   const renderListItems = (items: any[], ordered: boolean, level = 0) => {
     return items.map((item, index) => {
       const bullet = ordered
@@ -170,9 +186,10 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
           : "☐ "
         : "• ";
 
-      // Find any nested list tokens inside this item's tokens
-      const nestedLists = item.tokens?.filter((t: any) => t.type === "list");
-      const contentTokens = item.tokens?.filter((t: any) => t.type !== "list");
+      const nestedLists =
+        item.tokens?.filter((t: any) => t.type === "list") || [];
+      const contentTokens =
+        item.tokens?.filter((t: any) => t.type !== "list") || [];
 
       return (
         <View
@@ -180,74 +197,89 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
           style={[
             styles.listitemContainer,
             customStyles.listitemContainer,
-            { marginLeft: 1 * level },
+            { marginLeft: 10 * level },
           ]}
         >
           <Text style={[styles.listitem, customStyles.listitem]}>
             {bullet}
-            {renderTokens(contentTokens)}
+            {renderInlineTokens(contentTokens)}
           </Text>
-          {nestedLists &&
-            nestedLists.map((listToken: any, i: number) => (
-              <View
-                key={`nested-${level}-${index}-${i}`}
-                style={[
-                  styles.nestedList,
-                  customStyles.nestedList,
-                  { marginLeft: 20 },
-                ]}
-              >
-                {renderListItems(listToken.items, listToken.ordered, level + 1)}
-              </View>
-            ))}
+
+          {nestedLists.map((listToken: any, i: number) => (
+            <View
+              key={`nested-${level}-${index}-${i}`}
+              style={[
+                styles.nestedList,
+                customStyles.nestedList,
+                { marginLeft: 20 },
+              ]}
+            >
+              {renderListItems(listToken.items, listToken.ordered, level + 1)}
+            </View>
+          ))}
         </View>
       );
     });
   };
 
-  // Render individual token
-  const renderToken = (token: any, index: string | number) => {
+  const renderToken = (token: any, index: string | number): React.ReactNode => {
     switch (token.type) {
-      case "heading":
+      /* ----- blocks ----- */
+      case "heading": {
         const fontSize =
-          { 1: 32, 2: 28, 3: 24, 4: 20, 5: 16, 6: 14 }[token.depth] || 14;
+          { 1: 32, 2: 28, 3: 24, 4: 20, 5: 16, 6: 14 }[token.depth] ?? 14;
         return (
           <Text
             key={index}
             style={[styles.heading, customStyles.heading, { fontSize }]}
           >
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(token.tokens)}
           </Text>
         );
+      }
 
       case "paragraph":
         return (
           <Text key={index} style={[styles.paragraph, customStyles.paragraph]}>
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(token.tokens)}
           </Text>
         );
 
+      /* ----- inline ----- */
       case "text":
-        return <Text key={index}>{token.text}</Text>;
+        return token.text;
 
       case "strong":
         return (
           <Text key={index} style={[styles.strong, customStyles.strong]}>
-            {renderChildren(token)}
+            {renderInlineTokens(
+              token.tokens || [{ type: "text", text: token.text }]
+            )}
           </Text>
         );
 
       case "em":
         return (
           <Text key={index} style={[styles.em, customStyles.em]}>
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(
+              token.tokens || [{ type: "text", text: token.text }]
+            )}
           </Text>
         );
 
       case "del":
         return (
           <Text key={index} style={[styles.del, customStyles.del]}>
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(
+              token.tokens || [{ type: "text", text: token.text }]
+            )}
+          </Text>
+        );
+
+      case "codespan":
+        return (
+          <Text key={index} style={[styles.codespan, customStyles.codespan]}>
+            {token.text}
           </Text>
         );
 
@@ -260,7 +292,9 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
             accessibilityRole="link"
             accessibilityLabel={token.text}
           >
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(
+              token.tokens || [{ type: "text", text: token.text }]
+            )}
           </Text>
         );
 
@@ -280,28 +314,12 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
             <Video
               source={{ uri: token.href }}
               style={styles.videoPlayer}
-              controls={true}
+              controls
               resizeMode="contain"
               accessibilityLabel="Video content"
-              paused={true}
+              paused
             />
           </View>
-        );
-
-      case "code":
-        return (
-          <View key={index} style={[styles.code, customStyles.code]}>
-            <Text style={[styles.codeText, customStyles.codeText]}>
-              {token.text}
-            </Text>
-          </View>
-        );
-
-      case "codespan":
-        return (
-          <Text key={index} style={[styles.codespan, customStyles.codespan]}>
-            {token.text}
-          </Text>
         );
 
       case "blockquote":
@@ -310,7 +328,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
             key={index}
             style={[styles.blockquote, customStyles.blockquote]}
           >
-            {renderTokens(token.tokens)}
+            {renderInlineTokens(token.tokens)}
           </View>
         );
 
@@ -319,21 +337,6 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
           <View key={index} style={[styles.list, customStyles.list]}>
             {renderListItems(token.items, token.ordered)}
           </View>
-        );
-
-      case "list_item":
-        const bullet = token.ordered
-          ? `${token.index + 1}. `
-          : token.task
-          ? token.checked
-            ? "☑ "
-            : "☐ "
-          : "• ";
-        return (
-          <Text key={index} style={[styles.listitem, customStyles.listitem]}>
-            {bullet}
-            {renderTokens(token.tokens)}
-          </Text>
         );
 
       case "table":
@@ -349,7 +352,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
                     customStyles.tableHeader,
                   ]}
                 >
-                  {renderTokens(cell.tokens)}
+                  {renderInlineTokens(cell.tokens)}
                 </Text>
               ))}
             </View>
@@ -363,11 +366,20 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
                     key={`cell-${rowIndex}-${cellIndex}`}
                     style={[styles.tableCell, customStyles.tableCell]}
                   >
-                    {renderTokens(cell.tokens)}
+                    {renderInlineTokens(cell.tokens)}
                   </Text>
                 ))}
               </View>
             ))}
+          </View>
+        );
+
+      case "code":
+        return (
+          <View key={index} style={[styles.code, customStyles.code]}>
+            <Text style={[styles.codeText, customStyles.codeText]}>
+              {token.text}
+            </Text>
           </View>
         );
 
@@ -410,147 +422,94 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
     }
   };
 
-  // Helper to render inline tokens
-  const renderTokens = (tokens: any[]) => {
-    if (!tokens) return null;
-    return tokens.map((t, i) => renderToken(t, `${i}`));
-  };
+  // Error boundary to catch rendering issues
+  class ErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean }
+  > {
+    state = { hasError: false };
+
+    static getDerivedStateFromError() {
+      return { hasError: true };
+    }
+
+    render() {
+      if (this.state.hasError) {
+        return <Text style={styles.error}>Error rendering Markdown</Text>;
+      }
+      return this.props.children;
+    }
+  }
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.container, customStyles.container]}
-    >
-      {tokens.map((token, index) => renderToken(token, index))}
-    </ScrollView>
+    <ErrorBoundary>
+      <ScrollView
+        contentContainerStyle={[styles.container, customStyles.container]}
+      >
+        {tokens.map((token, index) => renderToken(token, index))}
+      </ScrollView>
+    </ErrorBoundary>
   );
 };
 
-// Base styles
+/* ---------- styles ---------- */
+
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-  heading: {
-    fontWeight: "bold",
-    marginVertical: 8,
-  },
-  paragraph: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
-  strong: {
-    fontWeight: "bold",
-  },
-  em: {
-    fontStyle: "italic",
-  },
-  del: {
-    textDecorationLine: "line-through",
-  },
-  link: {
-    color: "#1a0dab",
-    textDecorationLine: "underline",
-  },
+  container: { padding: 16 },
+  error: { color: "red", fontSize: 16, padding: 16 },
+  heading: { fontWeight: "700", marginVertical: 8, color: "black" },
+  paragraph: { fontSize: 16, marginVertical: 4, color: "black" },
+  strong: { fontWeight: "700", color: "black" },
+  em: { fontStyle: "italic", color: "black" },
+  del: { textDecorationLine: "line-through", color: "black" },
+  link: { color: "#1a0dab", textDecorationLine: "underline" },
   image: {
     width: "100%",
     height: 200,
     resizeMode: "contain",
     marginVertical: 8,
   },
-  video: {
-    width: "100%",
-    height: 200,
-    marginVertical: 8,
-  },
-  videoPlayer: {
-    width: "100%",
-    height: "100%",
-  },
+  video: { width: "100%", height: 200, marginVertical: 8 },
+  videoPlayer: { width: "100%", height: "100%" },
   code: {
     backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 4,
     marginVertical: 8,
   },
-  codeText: {
-    fontFamily: "Courier New",
-    fontSize: 14,
-  },
+  codeText: { fontSize: 14, color: "black" }, // Removed specific font
   codespan: {
-    fontFamily: "Courier New",
     backgroundColor: "#f0f0f0",
     paddingHorizontal: 4,
     borderRadius: 4,
+    color: "black",
   },
   blockquote: {
     borderLeftWidth: 4,
     borderLeftColor: "#ccc",
     paddingLeft: 12,
     marginVertical: 8,
+    backgroundColor: "#f9f9f9",
   },
-  list: {
-    marginVertical: 8,
-  },
-  listitemContainer: {
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  listitem: {
-    fontSize: 16,
-    marginVertical: 2,
-  },
-  nestedList: {
-    marginVertical: 4,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginVertical: 8,
-  },
+  list: { marginVertical: 8 },
+  listitemContainer: { flexDirection: "column", alignItems: "flex-start" },
+  listitem: { fontSize: 16, marginVertical: 2, color: "black" },
+  nestedList: { marginVertical: 4 },
+  table: { borderWidth: 1, borderColor: "#ccc", marginVertical: 8 },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
   },
-  tableCell: {
-    flex: 1,
-    padding: 8,
-    fontSize: 14,
-  },
-  tableHeader: {
-    fontWeight: "bold",
-    backgroundColor: "#f0f0f0",
-  },
-  hr: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    marginVertical: 8,
-  },
-  br: {
-    height: 8,
-  },
-  space: {
-    height: 8,
-  },
-  footnote: {
-    fontSize: 12,
-    color: "#555",
-  },
-  superscript: {
-    fontSize: 12,
-    lineHeight: 16,
-    position: "relative",
-    top: -5,
-  },
-  subscript: {
-    fontSize: 12,
-    lineHeight: 16,
-    position: "relative",
-    bottom: -5,
-  },
-  taskCheckbox: {
-    fontSize: 16,
-  },
+  tableCell: { flex: 1, padding: 8, fontSize: 14, color: "black" },
+  tableHeader: { fontWeight: "700", backgroundColor: "#f0f0f0" },
+  hr: { borderBottomWidth: 1, borderBottomColor: "#ccc", marginVertical: 8 },
+  br: { height: 8 },
+  space: { height: 8 },
+  footnote: { fontSize: 12, color: "#555" },
+  superscript: { fontSize: 12, lineHeight: 16, position: "relative", top: -5 },
+  subscript: { fontSize: 12, lineHeight: 16, position: "relative", bottom: -5 },
+  taskCheckbox: { fontSize: 16 },
 });
 
 export default MarkdownParser;
