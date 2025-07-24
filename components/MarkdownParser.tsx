@@ -233,7 +233,7 @@ const MarkdownParser: React.FC<MarkdownParserProps> = ({
       case "strong":
         return (
           <Text key={index} style={[styles.strong, customStyles.strong]}>
-            {renderTokens(token.tokens)}
+            {renderChildren(token)}
           </Text>
         );
 
